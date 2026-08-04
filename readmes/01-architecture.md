@@ -262,7 +262,7 @@ Los commits deben permitir entender qué ocurrió sin necesidad de abrir el cód
 ## Context
 
 <div style="text-align: center;">
-  <img src="./assets/context.jpg" style="width: 700px;" alt="Ciclo de vida del software">
+  <img src="./assets/context.jpg" style="width: 800px;" alt="Ciclo de vida del software">
 </div>
 
 ---
