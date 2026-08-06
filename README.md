@@ -4,6 +4,7 @@
 
 - [Tailwind](./readmes/00-tailwind.md)
 - [Arquitectura de Frontend](./readmes/01-architecture.md)
+- [Capas en React](./readmes/02-capas.md)
 - [Qué es una API](./readmes/02-api.md)
 - [Seeder de productos](./readmes/04-catalogo.md)
 - [Context & Reducer](./readmes/05-reducer.md)
