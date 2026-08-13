@@ -1,0 +1,570 @@
+# Checkout
+
+[Volver a Inicio](../README.md)
+
+# ¿Es necesario un Contexto o un Reducer?
+
+Es una de las decisiones de arquitectura más importantes en React.
+
+Una regla práctica es pensar en **tres preguntas**:
+
+1. **¿El estado necesita compartirse entre varios componentes?**
+2. **¿La lógica para modificar ese estado es simple o compleja?**
+3. **¿Necesitamos evitar pasar props a través de muchos componentes?**
+
+---
+
+## ¿Qué herramienta utilizar?
+
+| Situación                                             | `useState` | Context | Reducer |
+| ----------------------------------------------------- | :--------: | :-----: | :-----: |
+| Estado usado por un solo componente                   |     ✅     |   ❌    |   ❌    |
+| Estado local con lógica compleja                      |     ❌     |   ❌    |   ✅    |
+| Estado simple compartido entre componentes            |     ❌     |   ✅    |   ❌    |
+| Estado complejo compartido entre componentes          |     ❌     |   ✅    |   ✅    |
+| Estado simple que se puede pasar fácilmente por props |     ✅     |   ❌    |   ❌    |
+| Estado global con muchas transiciones relacionadas    |     ❌     |   ✅    |   ✅    |
+
+---
+
+## `useState`
+
+Úsalo cuando el estado:
+
+- pertenece a un componente;
+- tiene pocas variables;
+- tiene actualizaciones simples;
+- no necesita ser compartido ampliamente.
+
+Por ejemplo:
+
+```tsx
+const [isOpen, setIsOpen] = useState(false);
+```
+
+---
+
+## Context
+
+Úsalo cuando:
+
+- varios componentes necesitan acceder al mismo estado;
+- pasar ese estado mediante props se vuelve incómodo;
+- el estado pertenece conceptualmente a una sección de la aplicación.
+
+Por ejemplo:
+
+```text
+ProductsProvider
+    │
+    ├── SearchBar
+    ├── CategoryFilter
+    ├── ProductsList
+    └── Pagination
+```
+
+Todos pueden acceder al mismo estado mediante `useProducts()` sin tener que pasar props entre ellos.
+
+> **Importante:** Context no administra por sí mismo la lógica del estado. Principalmente permite **compartir valores y acciones** entre componentes.
+
+---
+
+## `useReducer`
+
+Úsalo cuando el problema principal sea la **complejidad de las transiciones del estado**.
+
+Por ejemplo, cuando tienes muchas variables relacionadas:
+
+```text
+products
+isLoading
+isLoadingMore
+error
+cursor
+hasNextPage
+```
+
+y diferentes acciones pueden modificar varias de ellas simultáneamente:
+
+```text
+LOAD_START
+LOAD_SUCCESS
+LOAD_ERROR
+LOAD_MORE_START
+LOAD_MORE_SUCCESS
+RESET
+```
+
+En esos casos, `useReducer` puede hacer que las transiciones sean más predecibles y centralizadas.
+
+---
+
+## ¿Cuándo usar ambos?
+
+Cuando tienes **estado complejo que además necesita ser compartido**.
+
+Es un escenario habitual para combinar:
+
+```text
+Context + useReducer
+```
+
+Por ejemplo:
+
+```text
+ProductsProvider
+       │
+       ├── useReducer
+       │      ↓
+       │   administra el estado
+       │
+       └── Context
+              ↓
+       comparte estado + acciones
+              │
+       ┌──────┼──────┐
+       ↓      ↓      ↓
+    Search  List   Pagination
+```
+
+El `Reducer` decide **cómo cambia el estado**.
+
+El `Context` decide **quién puede acceder a ese estado y a esas acciones**.
+
+---
+
+## ¿Cuándo no necesitas ninguno?
+
+Cuando el estado es local y no necesita compartirse:
+
+```tsx
+function ProductForm() {
+  const [name, setName] = useState("");
+  const [price, setPrice] = useState(0);
+
+  // ...
+}
+```
+
+No necesitas:
+
+```text
+Context ❌
+Reducer ❌
+```
+
+Simplemente:
+
+```text
+useState ✅
+```
+
+---
+
+## Regla práctica para recordar
+
+Podemos resumirlo así:
+
+> **`useState`** resuelve dónde guardar y actualizar un estado simple.
+>
+> **`useReducer`** organiza cómo cambia un estado complejo.
+>
+> **Context** resuelve cómo compartir un estado entre componentes.
+
+Por eso no sería correcto pensar:
+
+```text
+Context vs Reducer
+```
+
+sino:
+
+```text
+             ¿Necesito compartir?
+                    │
+             ┌──────┴──────┐
+            NO             SÍ
+             │              │
+     ¿Lógica compleja?   ¿Lógica compleja?
+         │       │          │        │
+        NO      SÍ         NO       SÍ
+         │       │          │        │
+    useState  useReducer  Context  Context
+                                      +
+                                   useReducer
+```
+
+Y existe además un caso intermedio:
+
+```text
+Estado local
+     +
+Reducer
+```
+
+cuando **no necesitas Context**, pero la lógica interna del componente sí es suficientemente compleja como para beneficiarse de un reducer.
+
+> **`useReducer`** no implica que necesites Context, y **Context** no implica que necesites **`useReducer`**.
+
+---
+
+## Resumen
+
+La decisión puede pensarse en dos dimensiones independientes:
+
+### 1. ¿El estado necesita compartirse?
+
+- **No** → `useState` o `useReducer`.
+- **Sí** → Context.
+
+### 2. ¿La lógica del estado es compleja?
+
+- **No** → `useState`.
+- **Sí** → `useReducer`.
+
+Por lo tanto:
+
+| Compartir estado | Complejidad | Solución               |
+| ---------------- | ----------- | ---------------------- |
+| ❌ No            | 🟢 Simple   | `useState`             |
+| ❌ No            | 🔴 Compleja | `useReducer`           |
+| ✅ Sí            | 🟢 Simple   | `Context + useState`   |
+| ✅ Sí            | 🔴 Compleja | `Context + useReducer` |
+
+Esta última tabla resume la idea fundamental:
+
+> **Context y Reducer no compiten entre sí. Se pueden combinar porque resuelven problemas diferentes.**
+
+---
+
+## Firestone Rules
+
+> IMPORTANTE: Este es un ejemplo funcional de Reglas para Firestone, puedes modificarlas para que se adapten a los requerimientos de tu proyecto.
+
+```
+rules_version = '2';
+
+service cloud.firestore {
+    match /databases/{database}/documents {
+
+        //* HELPERS
+        function isSignedIn() {
+            return request.auth != null;
+        }
+
+        function isAdmin() {
+            return isSignedIn()
+                && exists(
+                    /databases/$(database)/documents/users/$(request.auth.uid)
+                )
+                && get(
+                    /databases/$(database)/documents/users/$(request.auth.uid)
+                ).data.role == "admin";
+        }
+
+        //* PRODUCTS
+        match /products/{productId} {
+
+            //* Public catalog
+            allow read: if true;
+
+            //* Admin management
+            allow create, update, delete:
+                if isAdmin();
+        }
+
+        //* USERS
+        match /users/{userId} {
+
+            //* User can read own profile
+            allow read:
+                if isSignedIn()
+                && request.auth.uid == userId;
+
+            //* Managed internally
+            allow write: if false;
+        }
+
+
+        //* ORDERS
+        match /orders/{orderId} {
+
+            //* User creates own order
+            allow create:
+                if isSignedIn()
+                && request.resource.data.userId == request.auth.uid;
+
+
+            //* Admin sees all orders
+            //* User sees only own orders
+            allow read:
+                if isAdmin()
+                || (
+                    isSignedIn()
+                    && resource.data.userId == request.auth.uid
+                );
+
+
+            //* Admin can update only order status
+            allow update:
+                if isAdmin()
+                && request.resource.data
+                    .diff(resource.data)
+                    .affectedKeys()
+                    .hasOnly([
+                        "status",
+                        "updatedAt",
+                    ]);
+
+
+            //* Orders are immutable
+            allow delete: if false;
+        }
+    }
+}
+```
+
+## Detalles de la Configuración
+
+- `rules_version = '2';`
+  - Usa la versión 2 del lenguaje de reglas de Firestore.
+- `service cloud.firestore`
+  - Define las reglas de seguridad para Firestore.
+- `match /databases/{database}/documents`
+  - Aplica las reglas a todos los documentos.
+
+### Helpers
+
+#### `isSignedIn()`
+
+- Comprueba que el usuario esté autenticado.
+- Devuelve `true` si `request.auth` existe.
+
+#### `isAdmin()`
+
+- Comprueba que el usuario esté autenticado.
+- Busca su documento en `users/{uid}`.
+- Devuelve `true` si `role == "admin"`.
+
+### Colección `products`
+
+#### `allow read: if true;`
+
+- Cualquier persona puede leer los productos.
+- No requiere iniciar sesión.
+
+#### `allow write: if isAdmin();`
+
+- Solo los administradores pueden crear, editar y eliminar productos.
+
+### Colección `users`
+
+#### `allow read`
+
+- Solo un usuario autenticado puede leer su propio documento.
+
+#### `allow write: if false;`
+
+- Nadie puede modificar documentos de usuarios desde el cliente.
+
+### Colección `orders`
+
+#### Crear (`allow create`)
+
+- Requiere autenticación.
+- `userId` debe coincidir con el usuario autenticado.
+
+#### Leer (`allow read`)
+
+- Un administrador puede leer cualquier pedido.
+- Un usuario solo puede leer sus propios pedidos.
+
+#### Actualizar (`allow update`)
+
+- Solo un administrador puede actualizar pedidos.
+- Solo puede modificar:
+  - `status`
+  - `updatedAt`
+
+#### Eliminar (`allow delete`)
+
+- Nadie puede eliminar pedidos desde el cliente.
+
+### Explicación de `diff()`
+
+```js
+request.resource.data
+  .diff(resource.data)
+  .affectedKeys()
+  .hasOnly(["status", "updatedAt"]);
+```
+
+- Compara el documento nuevo con el actual.
+- Obtiene los campos modificados.
+- Permite la actualización únicamente si los únicos campos cambiados
+  son `status` y `updatedAt`.
+
+### Resumen
+
+- ✅ Cualquiera puede consultar productos.
+- ✅ Solo los administradores pueden gestionar productos.
+- ✅ Cada usuario solo puede leer su propia información.
+- ✅ Los usuarios pueden crear pedidos únicamente para sí mismos.
+- ✅ Los usuarios solo pueden ver sus propios pedidos.
+- ✅ Los administradores pueden ver todos los pedidos.
+- ✅ Los administradores solo pueden actualizar `status` y
+  `updatedAt`.
+- ✅ Ningún pedido puede eliminarse desde el cliente.
+
+---
+
+## Servicio de Órdenes
+
+> IMPORTANTE: Este es un ejemplo funcional de del servicio de órdenes, puedes modificarlas para que se adapten a los requerimientos de tu proyecto.
+
+```ts
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  orderBy,
+  query,
+  serverTimestamp,
+  setDoc,
+  Timestamp,
+  updateDoc,
+  where,
+  type DocumentData,
+  type FirestoreDataConverter,
+} from "firebase/firestore";
+import { db } from "../config/firebase";
+import type { Order, OrderStatus } from "../types/order.types";
+
+type OrderFirestore = Omit<Order, "id" | "createdAt" | "updatedAt"> & {
+  createdAt: Timestamp;
+  updatedAt?: Timestamp;
+};
+
+// Transformación de Datos
+const orderConverter: FirestoreDataConverter<Order> = {
+  // Antes de guardar en Firestone:
+  toFirestore(order: Order): DocumentData {
+    const { id, updatedAt, ...data } = order;
+
+    return {
+      ...data,
+      ...(updatedAt && { updatedAt }),
+    };
+  },
+
+  // Luego de leer desde Firestone:
+  fromFirestore(snapshot) {
+    const data = snapshot.data() as OrderFirestore;
+
+    return {
+      ...data,
+      id: snapshot.id,
+      createdAt: data.createdAt.toDate(),
+      updatedAt: data.updatedAt?.toDate(),
+    } satisfies Order;
+  },
+};
+
+// Devuelve una colección Tipada + transformada (orderConverter):
+function ordersCol() {
+  return collection(db, "orders").withConverter(orderConverter);
+}
+
+// Servicio con métodos de acceso a Firestone:
+export const ordersService = {
+  newOrderId(): string {
+    return doc(ordersCol()).id;
+  },
+
+  async createOrderFromCart(params: {
+    //! VALIDAR STOCK EN FIRESTONE ANTES DE CREAR LA ORDEN
+    //! DISMINUIR EL STOCK EN FIRESTONE
+    userId: string;
+    items: {
+      productId: string;
+      name: string;
+      price: number;
+      quantity: number;
+    }[];
+    total: number;
+    orderId: string;
+  }): Promise<string> {
+    const orderRef = doc(ordersCol(), params.orderId);
+
+    const order: Order = {
+      id: orderRef.id,
+      userId: params.userId,
+      items: params.items.map((item) => ({
+        productId: item.productId,
+        name: item.name,
+        priceAtPurchase: item.price,
+        quantity: item.quantity,
+      })),
+      total: params.total,
+      status: "pending",
+      // Placeholder del dominio
+      createdAt: new Date(0),
+    };
+
+    await setDoc(orderRef, {
+      ...order,
+      createdAt: serverTimestamp(),
+    } as unknown as Order);
+    return orderRef.id;
+  },
+
+  async getOrderById(orderId: string): Promise<Order | null> {
+    const snap = await getDoc(doc(ordersCol(), orderId));
+
+    if (!snap.exists()) {
+      return null;
+    }
+
+    return snap.data();
+  },
+
+  async getOrdersByUser(userId: string): Promise<Order[]> {
+    const q = query(
+      ordersCol(),
+      where("userId", "==", userId),
+      orderBy("createdAt", "desc"),
+    );
+    const snap = await getDocs(q);
+
+    return snap.docs.map((doc) => doc.data());
+  },
+
+  async listOrdersAdmin(params?: { status?: OrderStatus }): Promise<Order[]> {
+    const q = params?.status
+      ? query(
+          ordersCol(),
+          where("status", "==", params.status),
+          orderBy("createdAt", "desc"),
+        )
+      : query(ordersCol(), orderBy("createdAt", "desc"));
+    const snap = await getDocs(q);
+
+    return snap.docs.map((doc) => doc.data());
+  },
+
+  async updateOrderStatusAdmin(
+    orderId: string,
+    nextStatus: OrderStatus,
+  ): Promise<void> {
+    await updateDoc(doc(ordersCol(), orderId), {
+      status: nextStatus,
+      updatedAt: serverTimestamp(),
+    } as unknown as Partial<Order>);
+  },
+};
+```
+
+---
+
+[Volver a Inicio](../README.md)
