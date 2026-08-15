@@ -1,6 +1,37 @@
-# CICLO DE VIDA DEL SOFTWARE
+# Testing
 
 [Volver a Inicio](../README.md)
+
+## Librerías necesarias
+
+- `vitest` → runner de tests
+- `jsdom` → simula navegador para los tests
+- `@testing-library/react` → renderiza componentes React para testearlos
+- `@testing-library/jest-dom` → Permite utilizar matchers como:
+  - `toBeInTheDocument`: Se encuentra en el documento...
+  - `toBeDisabled`: Debe estar deshabilitado
+  - `Otros Matchesrs`: Orientados a Elementos del DOM (botones, divs, etc)
+- `@testing-library/user-event` → simula interacciones reales de usuario
+- `msw` → Mockea requests HTTP reales, evitando utilizar Firestone por ejemplo
+  - Mock Service Worker
+
+```bash
+npm install -D vitest jsdom @testing-library/react @testing-library/jest-dom @testing-library/user-event msw
+```
+
+## Notas Importantes sobre Testing en Vitest
+
+- Fixtures: Datos "falso" de cada dato que utilizamos en nuestra aplicación (Reutilizables)
+- renderWithProviders: Precargar con datos los Providers que al montarse hacen una petición al exterior (useEffect). Replica el árbol de Providers.
+- Testear Reducer: Reducer es una función pura. No necesito renderizar componente. Testeamos solamente lógica. Testeamos SOLO EL REDUCER.
+- Hooks: No necesito renderizar componente. Testeamos solamente lógica. Testea reducer, contexto, provider y hook.
+- Test de Componentes: Testeamos el resultado final de la lógica -> UI
+- MSW: Interceptar todos los request al Back For Frontend (/api/presign) y nos devuelve respuesta mockeada.
+- Checkout: Testesmos responsabilidades del Checkout Flow, NO Firestore. El checkout NO crea la orden, solo se lo solicita a Firestore enviándole los datos que necesita.
+
+---
+
+# CICLO DE VIDA DEL SOFTWARE
 
 > En desarrollo web, el ciclo de vida del software describe las fases por las que pasa un proyecto desde que se concibe hasta que deja de usarse. Aunque hay distintas metodologías (ágiles, en cascada, etc.), los pasos esenciales suelen ser los mismos, solo cambia cómo se organizan o se solapan.
 
@@ -76,75 +107,4 @@
 
 ---
 
-# Testing
-
-## Librerías necesarias
-
-- `vitest` → runner de tests
-- `jsdom` → simula navegador para los tests
-- `@testing-library/react` → renderiza componentes React para testearlos
-- `@testing-library/jest-dom` → Permite utilizar matchers como:
-  - `toBeInTheDocument`: Se encuentra en el documento...
-  - `toBeDisabled`: Debe estar deshabilitado
-  - `Otros Matchesrs`: Orientados a Elementos del DOM (botones, divs, etc)
-- `@testing-library/user-event` → simula interacciones reales de usuario
-- `msw` → Mockea requests HTTP reales, evitando utilizar Firestone por ejemplo
-  - Mock Service Worker
-
-```bash
-npm install -D vitest jsdom @testing-library/react @testing-library/jest-dom @testing-library/user-event msw
-```
-
-# CI/CD & Deploy
-
-## CI/CD: Integración Continua / Deploy Continuo
-
-- Cambios en Código -> Push -> Cambios en "master" -> Tests -> Deploy
-
-## GitHub Flow
-
-ARVHICO ".github/workflows" en Raíz del proyecto:
-
-```yml
-name: CI
-
-on:
-  push:
-    branches:
-      - main
-
-  pull_request:
-    branches:
-      - main
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-
-    steps:
-      # 1. Clona repositorio
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      # 2. Instala Node
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      # 3. Instala dependencias
-      - name: Install dependencies
-        run: npm install
-
-      # 4. Ejecuta tests
-      - name: Run tests
-        run: npm test
-
-      # 5. Ejecuta coverage
-      - name: Run coverage
-        run: npm run test:coverage
-```
-
----
-
-[Volver a Inicio](../../README.md)
+[Volver a Inicio](../README.md)

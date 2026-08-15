@@ -13,7 +13,10 @@
   - [useState, Context & Reducer](./readmes/08-checkout.md)
   - [Orders Service](./readmes/08-orders_service.md)
   - [Firestore Rules](./readmes/08-firestore_rules.md)
-- [Testing](./readmes/09-ciclo-software.md/)
+- Testing & Deployment
+  - [Ciclo de vida del Software & Testing](./readmes/09-ciclo-software.md)
+  - [Deployment paso a paso](./readmes/09-deployment.md)
+
 - [REPASO I](./readmes/10-repaso)
 - [REPASO II](./readmes/11-repaso)
 
