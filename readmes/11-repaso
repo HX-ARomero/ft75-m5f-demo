@@ -1,0 +1,106 @@
+# Consultas & Repaso II
+
+[Volver a Inicio](../README.md)
+
+## 1. 🎯Proceso de carga de aplicación React
+
+El proceso de carga de una aplicación React puede entenderse en varias etapas. Conocerlas ayuda a decidir dónde conviene usar `lazy`, `Context`, `useEffect`, etc.
+
+### ✅1. El navegador descarga la aplicación
+
+Cuando el usuario entra al sitio, o levantamos la aplicación con Vite el navegador descarga:
+
+- `index.html`
+- JavaScript principal (`main.js` o similar)
+- CSS
+- Otros recursos iniciales
+  Si usamos Vite, el punto de entrada suele ser:
+- `main.tsx`
+
+### ✅2. Se ejecuta `main.tsx`
+
+- En este momento React comienza a construir el árbol de componentes.
+
+```tsx
+createRoot(document.getElementById("root")!).render(
+  <StrictMode>
+    <AppProviders>
+      <App />
+    </AppProviders>
+  </StrictMode>,
+);
+```
+
+### ✅3. Se ejecutan los Providers
+
+1. Cada Provider se ejecuta como un componente normal.
+   - React renderiza desde arriba hacia abajo.
+2. Durante esta fase:
+   - se crean los estados (`useState`)
+   - se crean los reducers (`useReducer`)
+   - se crean funciones
+   - se calcula el `value` del Context
+3. Todavía **no se ejecutan los `useEffect`**.
+
+### ✅4. Se renderiza `App`
+
+1. Se renderiza App y todos sus hijos
+   - React renderiza desde arriba hacia abajo.
+
+```tsx
+function App() {
+  return <AppRoutes />;
+}
+```
+
+### ✅5. React pinta la interfaz
+
+1. Cuando termina de renderizar el árbol, React actualiza el DOM.
+2. Ahora el usuario ya puede ver la pantalla.
+
+### ✅6. Se ejecutan los `useEffect`
+
+1. Después del primer render llegan los efectos.
+2. Aquí normalmente ocurre:
+   - llamadas a APIs
+   - lectura de `localStorage`
+   - conexión con Firebase
+   - suscripciones
+   - temporizadores
+3. Es importante notar que **los efectos siempre ocurren después del primer render**, nunca antes.
+
+### ✅7. Llegan los datos
+
+1. Cuando termina la petición:
+
+```txt
+Firestore
+	↓
+loadProducts()
+	↓
+setProducts(...)
+	↓
+ProductsProvider
+	↓
+React vuelve a renderizar
+```
+
+2. Ahora todos los componentes que usan ese Context reciben los datos nuevos.
+
+[Volver a Inicio](../README.md)
+
+# Persistencia del Carrito
+
+1. Types
+  - Estructura del Carrito (Interfaz)
+    - CartItem
+2. Dónde guardar el carrito
+  - Colección "Cart" => userId, products: Product[]
+3. Crear Servicio
+4. Modificar Firestone Rules
+5. Modificar CartProvider
+6. Auth:
+  - Cargar carrito al inciar sesión
+  - Limpiar carrito al cerrar sesión
+7. Mostarlos en la interfaz
+8. Testear nueva funcionalidad
